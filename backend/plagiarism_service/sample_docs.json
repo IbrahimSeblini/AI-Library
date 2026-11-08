@@ -1,0 +1,5 @@
+[
+  {"id": "doc1", "title": "Introduction to Machine Learning", "content": "Machine learning is the study of computer algorithms that improve automatically through experience."},
+  {"id": "doc2", "title": "Deep Learning Basics", "content": "Deep learning is part of a broader family of machine learning methods based on artificial neural networks."},
+  {"id": "doc3", "title": "Information Retrieval", "content": "Information retrieval is about finding material of an unstructured nature that satisfies an information need."}
+]

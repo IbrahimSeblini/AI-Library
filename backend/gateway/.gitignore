@@ -1,0 +1,4 @@
+\gateway_venv
+\pycache__
+.env
+*.pyc

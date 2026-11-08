@@ -1,0 +1,47 @@
+name: Daily AI Judge CI
+
+on:
+  # schedule:
+  #   - cron: '30 19 * * *'  # 10:30 PM Lebanon (UTC+3) — disabled
+  # workflow_dispatch:      # disabled — re-enable to run manually
+
+jobs:
+  judge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Trigger CI run
+        env:
+          JUDGE_SERVICE_URL: ${{ secrets.JUDGE_SERVICE_URL }}
+          JUDGE_INTERNAL_KEY: ${{ secrets.JUDGE_INTERNAL_KEY }}
+        run: |
+          echo "Triggering CI run at $JUDGE_SERVICE_URL"
+          RESPONSE=$(curl -sf -X POST "$JUDGE_SERVICE_URL/ci/run?triggered_by=github_actions&wait=true" \
+            -H "X-Internal-Key: $JUDGE_INTERNAL_KEY" \
+            -H "Content-Type: application/json")
+          echo "$RESPONSE" | python3 -c "
+          import json, sys
+          d = json.load(sys.stdin)
+          print(f\"Run #{d['id']}: {d['passed']}/{d['total_cases']} passed, {d['failed']} failed\")
+          if d['failed'] > 0:
+            sys.exit(1)
+          "
+
+      - name: Fetch latest run summary
+        if: always()
+        env:
+          JUDGE_SERVICE_URL: ${{ secrets.JUDGE_SERVICE_URL }}
+          JUDGE_ADMIN_TOKEN: ${{ secrets.JUDGE_ADMIN_TOKEN }}
+        run: |
+          curl -sf "$JUDGE_SERVICE_URL/ci/runs?limit=1" \
+            -H "Authorization: Bearer $JUDGE_ADMIN_TOKEN" | \
+            python3 -c "
+          import json, sys
+          runs = json.load(sys.stdin)
+          if runs:
+            r = runs[0]
+            print(f\"Latest run: #{r['id']} — {r['passed']} passed, {r['failed']} failed\")
+          "
